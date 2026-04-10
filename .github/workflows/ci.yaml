@@ -1,0 +1,30 @@
+name: CI
+
+on: [push]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up environment
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Lint with Ruff
+        run: uv run ruff check .
+
+      - name: Run pytests
+        run: |
+          if find . -name "test_*.py" -o -name "*_test.py" | grep -q .; then
+            uv run pytest
+          else
+            echo "No tests found, skipping pytest."
+          fi
