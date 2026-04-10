@@ -1,0 +1,15 @@
+[project]
+name = "practice"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+eda = [
+    "matplotlib>=3.10.8",
+    "pandas>=3.0.2",
+    "pillow>=12.2.0",
+]
+
