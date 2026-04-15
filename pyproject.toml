@@ -3,14 +3,22 @@ name = "practice"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+requires-python = "==3.12.*"
+dependencies = [
+    "iterative-stratification>=0.1.9",
+    "pandas>=3.0.2",
+    "pillow>=12.1.1",
+    "timm>=1.0.26",
+    "torch>=2.11.0",
+    "torchaudio>=2.11.0",
+    "torchvision>=0.26.0",
+    "tqdm>=4.66.5",
+    "transformers>=5.5.3",
+]
 
 [dependency-groups]
 eda = [
     "matplotlib>=3.10.8",
-    "pandas>=3.0.2",
-    "pillow>=12.2.0",
 ]
 
 dev = [
@@ -18,3 +26,13 @@ dev = [
     "pytest>=9.0.3",
     "ruff>=0.15.10",
 ]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+torchaudio = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
