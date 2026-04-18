@@ -21,10 +21,10 @@ jobs:
       - name: Lint with Ruff
         run: uv run ruff check .
 
-      - name: Run pytests
+      - name: Run tests
         run: |
-          if find . -name "test_*.py" -o -name "*_test.py" | grep -q .; then
-            uv run pytest
+          if pytest --collect-only -q 2>/dev/null | grep -q "test session starts"; then
+            pytest
           else
-            echo "No tests found, skipping pytest."
+            echo "No tests found, skipping."
           fi

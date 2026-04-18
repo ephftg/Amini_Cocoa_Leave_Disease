@@ -2,10 +2,6 @@ import logging
 import logging.config
 import os
 
-# each container need to mount the logs to persist it
-# volumes:
-#       - ./logs:/app/logs        # host ./logs ← container writes here
-
 LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -36,8 +32,13 @@ LOGGING_CONFIG = {
         "pipeline": {
             "handlers": ["pipeline", "console"],
             "level": "INFO",
+            "propagate": False,
         },  # for pipeline
-        "frontend": {"handlers": ["frontend", "console"], "level": "INFO"},
+        "frontend": {
+            "handlers": ["frontend", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
 

@@ -14,7 +14,13 @@ logger = logging.getLogger("pipeline")
 def fix_image_orientation(image: Image.Image) -> Image.Image:
     """
     Correct the orientation of a PIL Image using its EXIF metadata.
-    Returns original if no EXIF orientation data.
+    If EXIF metadata absent, return original image.
+
+    Args:
+        image (Image.Image): Image to correct orientation.
+
+    Returns:
+        Image.Image: Corrected image, or original image if EXIF absent.
     """
     try:
         return ImageOps.exif_transpose(image)
@@ -25,17 +31,13 @@ def fix_image_orientation(image: Image.Image) -> Image.Image:
 
 def get_image_dimensions(image: Image.Image) -> Tuple[int, int]:
     """
-    Return the **(width, height)** of a PIL Image.
-    Assume the orientation of image is correct.
+    Get width, height of image.
 
-    Parameters
-    ----------
-    image : PIL.Image.Image
+    Args:
+        image (Image.Image): Input image.
 
-    Returns
-    -------
-    Tuple[int, int]
-        ``(width, height)`` in pixels.
+    Returns:
+        Tuple[int, int]: (width, height) in pixels.
     """
     width, height = image.size
     return width, height

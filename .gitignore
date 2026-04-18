@@ -12,3 +12,6 @@ wheels/
 # data and logs
 data/
 logs/
+mlruns/
+mlflow-data/
+outputs/
