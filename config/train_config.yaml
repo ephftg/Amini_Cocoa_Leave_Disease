@@ -1,0 +1,60 @@
+# data files
+data:
+  image_dir: data/dataset/images/clean_data
+  bbox_csv: data/clean_data.csv
+
+# the model to import to Train class
+model_plugins:
+  - src.model.fasterrcnn_convnext
+
+# processor to  import
+processor_plugins:
+  - src.processor.fasterrcnn_processor
+
+# mlflow
+mlflow:
+  uri: "http://mlflow-server:5000"
+  experiment_name: "train_full"
+
+# training mode
+mode: hyperparameter_tune
+
+# model to tradokin
+model_name: FasterRCNN_ConvNeXtV2
+
+# general training config
+max_epochs: 15
+num_classes: 3
+test_size: 0.4
+val_size: 0.2
+seed: 11
+early_stopping_patience: 3
+early_stopping_min_delta: 0.001
+
+# best parameters for training on full train set
+best_params:
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-3
+  batch_size: 2
+
+# hyperparameters training config
+kfold: 4
+num_trials: 2 # number of hyperparameter to try
+num_startup_trials: 1 # number of hyperparameter to try before TPE start
+
+# HP space
+hyperparameters:
+  learning_rate:
+    low: 1.0e-5
+    high: 1.0e-3
+    log: true
+
+  weight_decay:
+    low: 1.0e-5
+    high: 1.0e-3
+    log: true
+
+  batch_size:
+    low: 1
+    high: 2
+    step: 1

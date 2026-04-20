@@ -1,0 +1,57 @@
+services:
+  mlflow:
+    build:
+      context: .  # set root
+      dockerfile: ./docker/mlflow/Dockerfile
+    container_name: mlflow-server
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlflow-data/db:/mlflow/db
+      - ./mlflow-data/artifacts:/mlflow/artifacts
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////mlflow/db/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+      --serve-artifacts
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - mlflow-net
+
+  pipeline:
+    shm_size: '1g'
+    mem_limit: '10g'
+    memswap_limit: '14g'
+    build:
+      context: .  # set root
+      dockerfile: ./docker/pipeline/Dockerfile
+    container_name: pipeline-server
+    depends_on:
+      mlflow:
+        condition: service_healthy    # waits until MLflow passes healthcheck
+    volumes:
+      - ./logs:/app/logs           # preserve logs on host
+      - ./data:/app/data:ro           # :ro = read-only inside container for training data
+    deploy:                           # tells Docker to pass GPU to container at runtime
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    networks:
+      - mlflow-net
+
+
+networks:
+  mlflow-net:
+    driver: bridge

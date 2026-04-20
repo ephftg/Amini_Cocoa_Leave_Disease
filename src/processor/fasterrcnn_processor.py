@@ -8,13 +8,14 @@ from src.processor.base_processor import BaseProcessor
 from src.processor.processor_registry import ProcessorRegistry
 
 
-# register to processor registry
-# same name as model
+# register processor to processor registry using the same name as model
 @ProcessorRegistry.register("FasterRCNN_ConvNeXtV2")
 class FasterRCNNProcessor(BaseProcessor):
     """
-    Processor for FasterRCNN model.
-    It has a label_offset of 1 since FasterRCNN reserve index 0 for background.
+    Processor to process the image and bounding boxes data
+    to be passed into the FasterRCNN model.
+
+    Attribute "label_offset" is set as 1 since FasterRCNN reserves index 0 for background.
     """
 
     label_offset = 1
@@ -25,10 +26,12 @@ class FasterRCNNProcessor(BaseProcessor):
         image_rows: pd.DataFrame,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
-        Simple processing before input into FasterRCNN as FasterRCNN already has internal processing steps
+        Abstract method for the Processor class.
+
+        Simple processing as torchvision's FasterRCNN model already has internal processing steps
         that include resizing and normalization of image and corresponding bounding boxes.
 
-        Scale image values across all channels to [0,1] and extract bounding boxes coordinates.
+        Scale image values across all channels to [0,1] and extract bounding boxes coordinates from DataFrame.
         """
 
         # scale image value to [0,1], do not need to rescale image
@@ -39,6 +42,9 @@ class FasterRCNNProcessor(BaseProcessor):
         boxes = torch.tensor(
             image_rows[["xmin", "ymin", "xmax", "ymax"]].values, dtype=torch.float32
         )
+
+        # only the bounding boxes coordinates in target, the labels will be
+        # add later when the label onset is applied.
         target = {"boxes": boxes}
 
         return img_tensor, target

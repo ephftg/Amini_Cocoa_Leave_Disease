@@ -7,16 +7,15 @@ import torch
 
 class BaseProcessor(abc.ABC):
     """
-    Owns all model-specific dataset logic.
+    A class that process the images and bounding boxes
+    into the correct format for which the model expects.
 
-    Attributes
-    ----------
-    label_offset : int
-        0 for models where the last index is background (DINOv2),
-        1 for models where index 0 is reserved for background (FasterRCNN).
+    Contain the "label_offset" attribute which is the offset to the label index.
+    Different models automatically assign a value to the background class.
+    The offset ensures the labels of the class object are correct.
     """
 
-    label_offset: int = 0  # subclasses override as a class variable
+    label_offset: int = 0
 
     @abc.abstractmethod
     def process(
@@ -25,4 +24,17 @@ class BaseProcessor(abc.ABC):
         image_rows: pd.DataFrame,
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
-        Returm image in tensor form and targets dictionary with bounding box"""
+        Process an input image and the corresponding bounding boxes data and
+        output the processed image in tensor form and processed bounding boxes
+        data in dictionary form.
+
+        Args:
+            image: PIL image to be processed.
+            image_rows: DataFrame consisting of bounding boxes coordinates of objects on the image.
+
+        Returns:
+            A tuple:
+                - Processed image in Tensor form.
+                - Dictionary with a key value "boxes" for bounding boxes coordinates of all objects in image.
+
+        """

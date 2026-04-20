@@ -17,10 +17,10 @@ def fix_image_orientation(image: Image.Image) -> Image.Image:
     If EXIF metadata absent, return original image.
 
     Args:
-        image (Image.Image): Image to correct orientation.
+        image: Image to correct orientation.
 
     Returns:
-        Image.Image: Corrected image, or original image if EXIF absent.
+        Corrected PIL image, or original PIL image if EXIF absent.
     """
     try:
         return ImageOps.exif_transpose(image)
@@ -34,10 +34,12 @@ def get_image_dimensions(image: Image.Image) -> Tuple[int, int]:
     Get width, height of image.
 
     Args:
-        image (Image.Image): Input image.
+        image: Input image.
 
     Returns:
-        Tuple[int, int]: (width, height) in pixels.
+        A tuple of:
+            - width of image in pixels.
+            - height of image in pixels.
     """
     width, height = image.size
     return width, height
@@ -49,29 +51,21 @@ def letterbox_image(
     fill_color: Tuple[int, int, int] = (114, 114, 114),
 ) -> Tuple[Image.Image, float, Tuple[int, int]]:
     """
-    Resize an image to *target_shape* while preserving its aspect ratio and
-    padding the remaining area with *fill_color* (letterboxing).
+    Resize an image to the target shape while preserving its aspect ratio and
+    padding the remaining pixels with a solid fill color.
 
-    Parameters
-    ----------
-    image : PIL.Image.Image
-        Input image (any size).
-    target_shape : Tuple[int, int]
-        Desired output ``(width, height)`` in pixels.
-    fill_color : Tuple[int, int, int]
-        RGB fill colour for the padding regions.  Defaults to mid-grey
-        ``(114, 114, 114)`` - the standard YOLO padding colour.
+    Args:
+        image: The PIL image to resize.
+        target_shape: Desired output shape of image in (width, height) pixels.
+        fill_color: The solid RGB color for padding. Defaults to the standard gray color: (114, 114, 114).
 
-    Returns
-    -------
-    lb_image : PIL.Image.Image
-        Letterboxed image of size *target_shape*.
-    scale : float
-        The scale factor applied to the original image.
-    pad : Tuple[int, int]
-        ``(pad_x, pad_y)`` -  the number of padding pixels added on
-        *each side* of the shorter dimension.
+    Returns:
+        A tuple of:
+            - The letterboxed PIL image of size target_shape.
+            - The scale factor applied to the original image.
+            - The number of padding pixels added on the width and height dimension of image to match target shape.
     """
+
     src_w, src_h = image.size
     tgt_w, tgt_h = target_shape
 
@@ -79,13 +73,11 @@ def letterbox_image(
     new_w = int(src_w * scale)
     new_h = int(src_h * scale)
 
-    resized = image.resize(
-        (new_w, new_h), Image.BILINEAR
-    )  # scale image to new shape using bilinear interpolation, better quality image
+    # scale image to new shape using bilinear interpolation, better quality image
+    resized = image.resize((new_w, new_h), Image.BILINEAR)
+    # create new image with padding color
+    lb_image = Image.new("RGB", (tgt_w, tgt_h), fill_color)
 
-    lb_image = Image.new(
-        "RGB", (tgt_w, tgt_h), fill_color
-    )  # create new image with padding color
     pad_x = (tgt_w - new_w) // 2
     pad_y = (tgt_h - new_h) // 2
     lb_image.paste(resized, (pad_x, pad_y))  # paste image with the padding offset
@@ -93,7 +85,6 @@ def letterbox_image(
     return lb_image, scale, (pad_x, pad_y)
 
 
-###############
 # Normalize bounding box forward and backward transform
 def normalize_bbox(
     xmin: float,
@@ -106,24 +97,16 @@ def normalize_bbox(
     pad: Tuple[int, int],
 ) -> Tuple[float, float, float, float]:
     """
-    Convert original image bounding box coordinates to normalized coordinates
-    in the letterboxed image space.
+    Convert original image bounding box coordinates to normalized coordinates in the letterboxed image space.
 
-    Parameters
-    ----------
-    xmin, ymin, xmax, ymax : float
-        Bounding box coordinates in the original image (pixels).
-    width, height : int
-        Dimensions of the letterboxed (target) image.
-    scale : float
-        Scale factor returned by letterbox_image.
-    pad : Tuple[int, int]
-        (pad_x, pad_y) returned by letterbox_image.
+    Args:
+        xmin, ymin, xmax: float, ymax: Bounding box coordinates in pixels of the the original image in xyxy format.
+        width, height: Dimensions of the letterboxed image.
+        scale: Scale factor to scale the original image to the letterboxed image dimensions. Same scale in width, height diemnsions.
+        pad: A tuple of the number of padding pixels added on the width and height dimension of image to match target shape.
 
-    Returns
-    -------
-    Tuple[float, float, float, float]
-        Normalized (xmin, ymin, xmax, ymax) in [0, 1] relative to the
+    Returns:
+        A tuple of normalized (xmin, ymin, xmax, ymax) bounding box coordinates with range between [0, 1], relative to the
         letterboxed image dimensions.
     """
     pad_x, pad_y = pad
@@ -149,29 +132,17 @@ def denormalize_bbox(
     orig_size: Optional[Tuple[int, int]] = None,
 ) -> Tuple[int, int, int, int]:
     """
-    Convert normalized bounding box coordinates from letterboxed image space
-    back to the original image pixel coordinates.
+    Convert normalized bounding box coordinates from letterboxed image space back to the original image pixel coordinates.
 
-    Parameters
-    ----------
-    norm_xmin, norm_ymin, norm_xmax, norm_ymax : float
-        Normalized bounding box coordinates in [0, 1] relative to the
-        letterboxed image dimensions.
-    width, height : int
-        Dimensions of the letterboxed (target) image.
-    scale : float
-        Scale factor returned by letterbox_image.
-    pad : Tuple[int, int]
-        (pad_x, pad_y) returned by letterbox_image.
-    orig_size : Tuple[int, int], optional
-        Original image ``(width, height)`` before letterboxing. When provided,
-        coordinates are clipped to ``[0, orig_w]`` and ``[0, orig_h]``.
+    Args:
+        norm_xmin, norm_ymin, norm_xmax, norm_ymax: Normalized bounding box coordinates relative to the letterboxed image dimensions in xyxy format.
+        width, height: Dimensions of the letterboxed image.
+        scale: Scale factor to scale the original image to the letterboxed image dimensions. Same scale in width, height diemnsions.
+        pad: A tuple of the number of padding pixels added on the width and height dimension of image to match target shape.
+        orig_size: Optional tuple which contains the dimension of the original image (width, height), this prevent exceeding the dimension.
 
-    Returns
-    -------
-    Tuple[int, int, int, int]
-        Bounding box coordinates (xmin, ymin, xmax, ymax) in the original
-        image pixel space, clipped and rounded to integers.
+    Returns:
+        A tuple of bounding box coordinates in the original image pixel space, rounded to integers.
     """
     pad_x, pad_y = pad
 
@@ -190,6 +161,7 @@ def denormalize_bbox(
         xmax = max(0, min(xmax, orig_w))
         ymax = max(0, min(ymax, orig_h))
 
+    # convert to integer
     return round(xmin), round(ymin), round(xmax), round(ymax)
 
 
@@ -197,27 +169,28 @@ def train_test_split(
     df: pd.DataFrame, test_size: float, seed: int
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Split the provided dataframe into train and test sets while preserving class
-    distribution across the split using MultilabelStratifiedShuffleSplit.
+    Split the provided dataframe into train and test sets while preserving class distribution
+    in both sets using MultilabelStratifiedShuffleSplit.
 
-    Since each Image_ID can contain multiple objects (rows), the split is
-    performed at the Image_ID level. A multilabel binary matrix is built
-    per image (one column per class_id) so that the stratification accounts
-    for all classes present in each image simultaneously.
+    The split is performed at the Image level since each image could have multiple labels.
+    Using lables for the split could cause same image to be in both train and test set which is data leak.
 
-    Returns
-    -------
-    train_df : pd.DataFrame
-        Training subset with reset index.
-    test_df : pd.DataFrame
-        Test subset with reset index.
+    Args:
+        df: Dataframe to split.
+        test_size: The fraction of the test set relative to the whole data size.
+        seed: The random state for the split for reproducibility.
+
+    Returns:
+        A tuple of train and test Dataframe with reset index.
     """
 
     # Image_ID is filename of image in dataframe
     image_ids = df["Image_ID"].unique()
+
+    # get all classes in data
     all_classes = sorted(df["class_id"].unique())
 
-    # Binary matrix: rows = images, cols = class_ids
+    # Create binary matrix with rows = images and cols = class_ids
     # Entry [i, j] = 1 if image i contains at least one object of class j
     label_matrix = np.zeros((len(image_ids), len(all_classes)), dtype=int)
     image_id_to_idx = {img_id: i for i, img_id in enumerate(image_ids)}
@@ -228,11 +201,11 @@ def train_test_split(
         j = class_to_col[row["class_id"]]
         label_matrix[i, j] = 1
 
-    # --- Stratified split at Image_ID level ---
+    # Stratified split using image ID, maintaining class distribution
     splitter = MultilabelStratifiedShuffleSplit(
         n_splits=1,  # produce 1 random split
         test_size=test_size,
-        random_state=seed,  # set the seed for reproducibility
+        random_state=seed,
     )
 
     # get the indices of the split
@@ -241,6 +214,7 @@ def train_test_split(
     train_image_ids = set(image_ids[train_indices])
     test_image_ids = set(image_ids[test_indices])
 
+    # filter to get train and test set and reset index
     train_df = df[df["Image_ID"].isin(train_image_ids)].reset_index(drop=True)
     test_df = df[df["Image_ID"].isin(test_image_ids)].reset_index(drop=True)
 

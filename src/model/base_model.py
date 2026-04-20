@@ -6,13 +6,7 @@ from torch import Tensor
 
 class BaseModel(nn.Module, abc.ABC):
     """
-    Abstract base class for all object-detection models in this project.
-
-    Subclasses must implement:
-      - :meth:`forward` – inference / training forward pass
-      - :meth:`freeze_encoder` – freeze all encoder / backbone parameters
-      - :meth:`unfreeze_encoder` – unfreeze encoder parameters (fine-tune)
-      - :attr:`encoder_name` – human-readable name of the encoder
+    Abstract base class for pytorch object-detection models.
     """
 
     @property
@@ -27,31 +21,42 @@ class BaseModel(nn.Module, abc.ABC):
         targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> Dict[str, Tensor] | List[Dict[str, Tensor]]:
         """
-        Forward pass.
+        Forward pass of the data into the model.
+        Targets are only required in training mode, in eval mode, it will be ignored even if provided.
 
-        Parameters
-        ----------
-        images : List[Tensor]
-            Batch of images, each ``[C, H, W]`` in ``[0, 1]``.
-        targets : List[Dict[str, Tensor]], optional
-            Ground-truth annotations (required during training).
-            Each dict must contain:
-              - ``"boxes"``  : ``FloatTensor[N, 4]`` – xyxy format
-              - ``"labels"`` : ``Int64Tensor[N]``
+        Args:
+            images: List of images in tensor form.
+            targets: List of ground-truth annotations in dictionary format.
+                    Each dictionary must contain "boxes" for the bounding box coordinates and "label" for the class label.
 
-        Returns
-        -------
-        During *training*: a dict of scalar losses.
-        During *inference*: a list of prediction dicts per image, each
-        containing ``"boxes"``, ``"labels"``, ``"scores"``.
+        Returns:
+            Changes depending on mode:
+                Train: A dictionary of losses
+                Eval: A list of prediction dictionary per image.
+                      Each dictionary has "boxes" for the bounding box coordinates,
+                      "label" for the class label and "scores" for confidence of class prediction.
         """
 
     def trainable_parameters(self) -> List[nn.Parameter]:
-        """Return only parameters that require gradients."""
+        """
+        Filter for trainable parameters (requires gradient) in model.
+
+        Returns:
+            List of trainable parameters in model.
+        """
         return [p for p in self.parameters() if p.requires_grad]
 
     def count_parameters(self, trainable_only: bool = True) -> int:
-        """Output total number of parameters in model. Can specify only trainable parameters count only."""
+        """
+        Output total number of parameters in model.
+        Can specify only trainable parameters count only.
+
+        Args:
+            trainable_only: Boolean variable to specify if only trainable parameter count is required.
+
+        Returns:
+            Number of parameters in model or number of trainable parameters in model.
+        """
         params = (
             self.trainable_parameters() if trainable_only else list(self.parameters())
         )
