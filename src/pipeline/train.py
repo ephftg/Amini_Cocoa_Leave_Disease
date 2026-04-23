@@ -1,6 +1,5 @@
-import importlib
 import logging
-from typing import Dict, List, Type, Tuple, Any, Optional
+from typing import Any
 import pandas as pd
 from omegaconf import DictConfig
 import torch
@@ -17,6 +16,7 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 import time
 import gc
 
+from src.utils.base_registry import BaseRegistry
 from src.utils.logging import setup_logging
 from src.model.base_model import BaseModel
 from src.utils.data_processing import train_test_split
@@ -32,8 +32,8 @@ logger = logging.getLogger("pipeline")
 
 
 def collate_fn(
-    batch: List[Tuple[Tensor, Dict]],
-) -> Tuple[Tuple[Tensor, ...], Tuple[Dict, ...]]:
+    batch: list[tuple[Tensor, dict]],
+) -> tuple[tuple[Tensor, ...], tuple[dict, ...]]:
     """
     Customized collate_fn for DataLoader for object detection, since image comes in different sizes
     and have different number of objects per image which is incompatible with default collation.
@@ -50,91 +50,14 @@ def collate_fn(
     return tuple(zip(*batch))
 
 
-class Train:
+class Train(BaseRegistry):
     """
     Train class that allow for training the model either for hyperparameter tuning
     or  training with the full train+valid set.
 
-    It also have a model registry that register all models available.
+    It inherits from the BaseRegistry classs so as to have a model registry
+    that register all models available.
     """
-
-    _MODEL_REGISTRY: Dict[str, Type[BaseModel]] = {}
-
-    @classmethod
-    def register(cls, name: str):
-        """
-        A decorator factory that registers a model under a name.
-
-        Usage: Add @Train.register(<name to register under)
-                above a model class.
-
-        Args:
-            name: Name for which the model will be registered under.
-
-        Returns:
-            Callable: A decorator function that registers the input model
-                    and then returns the model.
-        """
-
-        def decorator(model_cls: Type[BaseModel]) -> Type[BaseModel]:
-            """
-            Register the Model into the Model regsitry and returns it.
-            """
-            if name in cls._MODEL_REGISTRY:
-                logger.info(
-                    f"Model {name} is already registered, overwriting with {(model_cls.__name__,)}"
-                )
-            cls._MODEL_REGISTRY[name] = model_cls
-            logger.info(f"Model {model_cls.__name__} is registerd under {name}")
-            return model_cls
-
-        return decorator
-
-    @classmethod
-    def available_models(cls) -> List[str]:
-        """Return a list of registered model names."""
-        return cls._MODEL_REGISTRY
-
-    @classmethod
-    def get_model(cls, name: str) -> Type[BaseModel]:
-        """
-        Get the model available in the registry using the registered name.
-
-        Args:
-            name: Name that the model is registered under in the registry.
-
-        Returns:
-            Model that correspond to the name in the registry.
-
-        Raises:
-            KeyError: if name is not found in registry.
-        """
-        try:
-            return cls._MODEL_REGISTRY[name]
-        except KeyError:
-            available = ", ".join(cls.available_models()) or "<none>"
-            raise KeyError(
-                f"Model '{name}' is not registered. Available models: {available}"
-            ) from None
-
-    @classmethod
-    def load_model_plugins(cls, module_paths: List[str]) -> None:
-        """
-        Import a list of model modules.
-
-        The model modules should contain the class with decorator
-        "Train.register()" to so as to register the model to the model registry for use.
-
-        This allows models to be registered without explicit imports
-        in the main code, where adding a new model means just
-        adding to the list of modules.
-
-        Args:
-            module_paths: List containing model's module paths relative to the main code.
-        """
-        for path in module_paths:
-            importlib.import_module(path)
-            logger.info(f"Loaded model: {path}")
 
     def __init__(self, cfg: DictConfig) -> None:
         """
@@ -163,7 +86,7 @@ class Train:
 
     def get_datasets(
         self,
-    ) -> Tuple[DetectionDataset, DetectionDataset, DetectionDataset]:
+    ) -> tuple[DetectionDataset, DetectionDataset, DetectionDataset]:
         """
         Get the train, validation, and test datasets using the fraction indicated in config file.
 
@@ -204,7 +127,7 @@ class Train:
 
     def get_kfold_splits(
         self, dataset: DetectionDataset
-    ) -> List[Tuple[List[int], List[int]]]:
+    ) -> list[tuple[list[int], list[int]]]:
         """
         Generate multilabel stratified K-Fold splits which ensures class distribution
         in train, valid set is maintained across all splits.
@@ -254,9 +177,9 @@ class Train:
         self,
         model: BaseModel,
         loader: DataLoader,
-        optimizer: Optional[Any],
-        is_train: bool,
-    ) -> Tuple[float, float]:
+        optimizer: Any | None = None,
+        is_train: bool = True,
+    ) -> tuple[float, float, float]:
         """
         Run a single training or evaluation epoch over a DataLoader.
 
@@ -417,7 +340,7 @@ class Train:
 
     def hyperparameter_tune(
         self,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Hyperparameter tuning on train+valid set using Optuna search that aims to maximise the
         validation set mAP:0.5 since task does not required exact boxes.
@@ -435,12 +358,12 @@ class Train:
             if none of the trials completed.
         """
 
-        if self.model_name not in self._MODEL_REGISTRY:
+        if self.model_name not in self._REGISTRY:
             raise ValueError(
                 f"Unknown model '{self.model_name}'. Registered: {self.available_models()}"
             )
 
-        model_cls = self._MODEL_REGISTRY[self.model_name]
+        model_cls = self._REGISTRY[self.model_name]
         train_ds, valid_ds, _ = self.get_datasets()
         max_epochs = self.cfg["max_epochs"]
         num_classes = self.cfg["num_classes"]
@@ -638,7 +561,7 @@ class Train:
 
         return best_params
 
-    def train_full_set(self) -> Dict[str, Any]:
+    def train_full_set(self) -> dict[str, Any]:
         """
         Train on full training set (train + val) and evaluate on test set.
         Log per epoch train loss in Mlflow and register the trained model at the end of training epochs to Mlflow registry.
@@ -651,12 +574,12 @@ class Train:
             Dictionary containing test set loss, mAP@0.5:0.95 and mAP@0.5.
         """
 
-        if self.model_name not in self._MODEL_REGISTRY:
+        if self.model_name not in self._REGISTRY:
             raise ValueError(
                 f"Unknown model '{self.model_name}'. Registered: {self.available_models()}"
             )
 
-        model_cls = self._MODEL_REGISTRY[self.model_name]
+        model_cls = self._REGISTRY[self.model_name]
         train_ds, val_ds, test_ds = self.get_datasets()
 
         # Merge train and validation sets for training

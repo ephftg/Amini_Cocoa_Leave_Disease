@@ -34,6 +34,11 @@ dev = [
     "ruff>=0.15.10",
 ]
 
+inference = [
+    "python-multipart>=0.0.26",
+    "streamlit>=1.56.0",
+]
+
 [tool.uv.sources]
 torch = { index = "pytorch-cu128" }
 torchvision = { index = "pytorch-cu128" }

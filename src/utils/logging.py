@@ -16,9 +16,9 @@ LOGGING_CONFIG = {
             "maxBytes": 5_000_000,  # 5 MB per file
             "backupCount": 3,  # keep 3 old files
         },
-        "frontend": {
+        "inference": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": "logs/frontend.log",
+            "filename": "logs/inference.log",
             "formatter": "standard",
             "maxBytes": 5_000_000,
             "backupCount": 3,
@@ -34,8 +34,8 @@ LOGGING_CONFIG = {
             "level": "INFO",
             "propagate": False,
         },  # for pipeline
-        "frontend": {
-            "handlers": ["frontend", "console"],
+        "inference": {
+            "handlers": ["inference", "console"],
             "level": "INFO",
             "propagate": False,
         },

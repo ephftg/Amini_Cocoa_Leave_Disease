@@ -1,9 +1,6 @@
 import logging
-from typing import Dict, List, Optional
-
 import torch.nn as nn
 from torch import Tensor
-
 import timm
 from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.rpn import AnchorGenerator
@@ -99,7 +96,7 @@ class FasterRCNN_ConvNeXtV2(BaseModel):
                 )
                 self.out_channels = out_ch
 
-            def forward(self, x: Tensor) -> Dict[str, Tensor]:
+            def forward(self, x: Tensor) -> dict[str, Tensor]:
                 """
                 Forward pass of image into the model backbone with FPN.
 
@@ -149,9 +146,9 @@ class FasterRCNN_ConvNeXtV2(BaseModel):
 
     def forward(
         self,
-        images: List[Tensor],
-        targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> Dict[str, Tensor] | List[Dict[str, Tensor]]:
+        images: list[Tensor],
+        targets: list[dict[str, Tensor]] | None = None,
+    ) -> dict[str, Tensor] | list[dict[str, Tensor]]:
         """
         Forward pass of the model that is an abstract method.
         Direct input into the model as the FasterRCNN class handles the process.

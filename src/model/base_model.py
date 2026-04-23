@@ -1,5 +1,4 @@
 import abc
-from typing import Dict, List, Optional
 import torch.nn as nn
 from torch import Tensor
 
@@ -17,9 +16,9 @@ class BaseModel(nn.Module, abc.ABC):
     @abc.abstractmethod
     def forward(
         self,
-        images: List[Tensor],
-        targets: Optional[List[Dict[str, Tensor]]] = None,
-    ) -> Dict[str, Tensor] | List[Dict[str, Tensor]]:
+        images: list[Tensor],
+        targets: list[dict[str, Tensor]] | None = None,
+    ) -> dict[str, Tensor] | list[dict[str, Tensor]]:
         """
         Forward pass of the data into the model.
         Targets are only required in training mode, in eval mode, it will be ignored even if provided.
@@ -37,7 +36,7 @@ class BaseModel(nn.Module, abc.ABC):
                       "label" for the class label and "scores" for confidence of class prediction.
         """
 
-    def trainable_parameters(self) -> List[nn.Parameter]:
+    def trainable_parameters(self) -> list[nn.Parameter]:
         """
         Filter for trainable parameters (requires gradient) in model.
 

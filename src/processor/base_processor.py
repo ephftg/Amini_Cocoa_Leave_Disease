@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Dict, Tuple
+from typing import Any
 import pandas as pd
 from PIL import Image
 import torch
@@ -22,7 +22,7 @@ class BaseProcessor(abc.ABC):
         self,
         image: Image.Image,
         image_rows: pd.DataFrame,
-    ) -> Tuple[torch.Tensor, Dict[str, Any]]:
+    ) -> tuple[torch.Tensor, dict[str, Any]]:
         """
         Process an input image and the corresponding bounding boxes data and
         output the processed image in tensor form and processed bounding boxes

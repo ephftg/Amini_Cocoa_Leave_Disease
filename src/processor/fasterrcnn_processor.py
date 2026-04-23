@@ -1,6 +1,6 @@
 import torch
 from PIL import Image
-from typing import Any, Dict, Tuple
+from typing import Any
 import pandas as pd
 from torchvision import transforms
 
@@ -24,7 +24,7 @@ class FasterRCNNProcessor(BaseProcessor):
         self,
         image: Image.Image,
         image_rows: pd.DataFrame,
-    ) -> Tuple[torch.Tensor, Dict[str, Any]]:
+    ) -> tuple[torch.Tensor, dict[str, Any]]:
         """
         Abstract method for the Processor class.
 

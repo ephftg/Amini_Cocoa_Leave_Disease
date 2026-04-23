@@ -13,7 +13,7 @@ logger = logging.getLogger("pipeline")
 @hydra.main(config_path="config", config_name="train_config", version_base=None)
 def main(cfg: DictConfig) -> None:
     # initialize train class and register all models
-    Train.load_model_plugins(cfg["model_plugins"])
+    Train.load_plugins(cfg["model_plugins"])
     trainer = Train(cfg)
 
     # initialize processor class and register all processors

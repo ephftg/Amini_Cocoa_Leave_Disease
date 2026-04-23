@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, Tuple
+from typing import Any
 import math
 import logging
 from torch.utils.data import Dataset
@@ -7,6 +7,7 @@ from pathlib import Path
 from PIL import Image
 import pandas as pd
 import torch
+from torch import Tensor
 
 from src.utils.data_processing import fix_image_orientation
 from src.utils.logging import setup_logging
@@ -62,7 +63,7 @@ class DetectionDataset(Dataset):
         """Returns total number of images in dataset."""
         return len(self.image_names)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, Dict[str, Any]]:
+    def __getitem__(self, idx: int) -> tuple[Tensor, dict[str, Any]]:
         """s
         Return each item in the Dataset using the index
 
@@ -115,7 +116,7 @@ class Params:
     weight_decay: float
     batch_size: int
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """
         Convert dataclass to dictionary which is required format
         to log multiple parameters to Mlflow using log_params().
@@ -147,7 +148,7 @@ class EpochMetrics:
     val_map: float  # mAP@0.5:0.95
     val_map_50: float  # mAP@0.5
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """
         Convert dataclass to dictionary which is required format
         to log multiple metrics to Mlflow using log_metrics().

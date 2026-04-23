@@ -1,5 +1,4 @@
 import logging
-from typing import Tuple, Optional
 from PIL import Image, ImageOps
 import pandas as pd
 import numpy as np
@@ -29,7 +28,7 @@ def fix_image_orientation(image: Image.Image) -> Image.Image:
         return image
 
 
-def get_image_dimensions(image: Image.Image) -> Tuple[int, int]:
+def get_image_dimensions(image: Image.Image) -> tuple[int, int]:
     """
     Get width, height of image.
 
@@ -47,9 +46,9 @@ def get_image_dimensions(image: Image.Image) -> Tuple[int, int]:
 
 def letterbox_image(
     image: Image.Image,
-    target_shape: Tuple[int, int],
-    fill_color: Tuple[int, int, int] = (114, 114, 114),
-) -> Tuple[Image.Image, float, Tuple[int, int]]:
+    target_shape: tuple[int, int],
+    fill_color: tuple[int, int, int] = (114, 114, 114),
+) -> tuple[Image.Image, float, tuple[int, int]]:
     """
     Resize an image to the target shape while preserving its aspect ratio and
     padding the remaining pixels with a solid fill color.
@@ -94,8 +93,8 @@ def normalize_bbox(
     width: int,
     height: int,
     scale: float,
-    pad: Tuple[int, int],
-) -> Tuple[float, float, float, float]:
+    pad: tuple[int, int],
+) -> tuple[float, float, float, float]:
     """
     Convert original image bounding box coordinates to normalized coordinates in the letterboxed image space.
 
@@ -128,9 +127,9 @@ def denormalize_bbox(
     width: int,
     height: int,
     scale: float,
-    pad: Tuple[int, int],
-    orig_size: Optional[Tuple[int, int]] = None,
-) -> Tuple[int, int, int, int]:
+    pad: tuple[int, int],
+    orig_size: tuple[int, int] | None = None,
+) -> tuple[int, int, int, int]:
     """
     Convert normalized bounding box coordinates from letterboxed image space back to the original image pixel coordinates.
 
@@ -167,7 +166,7 @@ def denormalize_bbox(
 
 def train_test_split(
     df: pd.DataFrame, test_size: float, seed: int
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Split the provided dataframe into train and test sets while preserving class distribution
     in both sets using MultilabelStratifiedShuffleSplit.

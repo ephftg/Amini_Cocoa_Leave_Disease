@@ -1,15 +1,19 @@
 services:
   mlflow:
     build:
-      context: .  # set root
+      context: .
       dockerfile: ./docker/mlflow/Dockerfile
     container_name: mlflow-server
     restart: unless-stopped
     ports:
       - "5000:5000"
+    environment:
+      - GUNICORN_CMD_ARGS=--timeout 300  # increase timeout for large model download
     volumes:
       - ./mlflow-data/db:/mlflow/db
       - ./mlflow-data/artifacts:/mlflow/artifacts
+    # store metadata in SQLite file (simple project)
+    # store artifacts in in local path
     command: >
       mlflow server
       --host 0.0.0.0
@@ -17,6 +21,7 @@ services:
       --backend-store-uri sqlite:////mlflow/db/mlflow.db
       --artifacts-destination /mlflow/artifacts
       --serve-artifacts
+    # check server is alive for visibility
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 30s
@@ -27,8 +32,8 @@ services:
       - mlflow-net
 
   pipeline:
-    shm_size: '1g'
-    mem_limit: '10g'
+    shm_size: '1g'  # increase shared memory from default 64MB to 1GB for multiple workers in dataloader
+    mem_limit: '10g'  # Cap on RAM usage so that is does not destabilize machine
     memswap_limit: '14g'
     build:
       context: .  # set root
@@ -47,11 +52,57 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-
     networks:
       - mlflow-net
 
+  fastapi:
+    build:
+      context: .  # set root
+      dockerfile: ./docker/inference/Dockerfile.backend
+    container_name: fastapi-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      mlflow:
+        condition: service_healthy    # waits until MLflow passes healthcheck
+    volumes:
+      - ./logs:/app/logs           # preserve logs on host
+      - ./data:/app/data:ro           # :ro = read-only inside container for training data
+    deploy:                           # tells Docker to pass GPU to container at runtime
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 100s  # start up include model download
+    networks:
+      - mlflow-net
 
+  streamlit:
+    build:
+      context: .  # set root
+      dockerfile: ./docker/inference/Dockerfile.frontend
+    container_name: streamlit-frontend
+    restart: unless-stopped
+    depends_on:
+      fastapi:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./logs:/app/logs           # preserve logs on host
+      - ./data:/app/data:ro           # :ro = read-only inside container for training data
+    networks:
+      - mlflow-net
+
+# private network in host for container to communicate
 networks:
   mlflow-net:
     driver: bridge
