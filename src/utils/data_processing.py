@@ -165,7 +165,9 @@ def denormalize_bbox(
 
 
 def train_test_split(
-    df: pd.DataFrame, test_size: float, seed: int
+    df: pd.DataFrame,
+    test_size: float,
+    seed: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Split the provided dataframe into train and test sets while preserving class distribution

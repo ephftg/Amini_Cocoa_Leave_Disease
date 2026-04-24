@@ -18,7 +18,8 @@ logger = logging.getLogger("inference")
 
 
 def get_local_data(
-    data_dir_path: Path, df_file_path: Path
+    data_dir_path: Path,
+    df_file_path: Path,
 ) -> tuple[list[Path], pd.DataFrame] | None:
     """
     Get the list of image file names from the input data directory path.
@@ -58,7 +59,9 @@ def get_local_data(
 
 
 def get_pil_img_detection_from_df(
-    input_df: pd.DataFrame, image_dir_path: Path, class_dict: dict[int, str]
+    input_df: pd.DataFrame,
+    image_dir_path: Path,
+    class_dict: dict[int, str],
 ) -> tuple[Image.Image, dict[str, Tensor]]:
     """
     Convert the dataframe containing bounding boxes information of one image,
@@ -158,7 +161,8 @@ def annotate_ground_truth_on_image(
 
 
 def analyze_local_images(
-    inference_url: str, filenames: list[str]
+    inference_url: str,
+    filenames: list[str],
 ) -> list[tuple[Image.Image, str]] | str:
     """
     Send a list of filenames to the FastAPI endpoint to get object detection results from it.
@@ -191,7 +195,8 @@ def analyze_local_images(
 
 
 def analyze_upload_images(
-    inference_url: str, file_objects: list[UploadedFile]
+    inference_url: str,
+    file_objects: list[UploadedFile],
 ) -> list[tuple[Image.Image, str]] | str:
     """
     Convert the list of UploadedFile obtained from Streamlit to a list of UploadFile,

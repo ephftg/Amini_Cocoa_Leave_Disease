@@ -222,7 +222,9 @@ def map_label_to_class_name(class_dict: dict, label_idx: int) -> str:
 
 
 def annotate_object_on_image(
-    pil_img: Image.Image, detection: dict[str, Tensor], class_dict: dict[int, str]
+    pil_img: Image.Image,
+    detection: dict[str, Tensor],
+    class_dict: dict[int, str],
 ) -> Image.Image:
     """
     Use the object detection results of the image to draw bounding boxes
@@ -281,7 +283,9 @@ def annotate_object_on_image(
 
             # x1, y1 top left corner, x2,y2 is bottom right corner
             draw.rectangle(
-                [x1, y1, x2, y2], outline=color, width=border_pixel_thickeness
+                [x1, y1, x2, y2],
+                outline=color,
+                width=border_pixel_thickeness,
             )
 
             # label at top left corner, inside box so that label is always on image

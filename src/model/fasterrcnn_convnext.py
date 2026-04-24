@@ -73,7 +73,10 @@ class FasterRCNN_ConvNeXtV2(BaseModel):
 
         class _BackboneWithFPN(nn.Module):
             def __init__(
-                self, backbone: nn.Module, in_ch: list[int], out_ch: int
+                self,
+                backbone: nn.Module,
+                in_ch: list[int],
+                out_ch: int,
             ) -> None:
                 """
                 Class for the backbone layer for FasterRCNN which is feature encoder and FPN combined.

@@ -64,7 +64,7 @@ class DetectionDataset(Dataset):
         return len(self.image_names)
 
     def __getitem__(self, idx: int) -> tuple[Tensor, dict[str, Any]]:
-        """s
+        """
         Return each item in the Dataset using the index
 
         First read the image from the "image_dir" and fix the image's orientation
@@ -166,7 +166,11 @@ class EarlyStopping:
     has not improved by a certain threshold for several consecutive epochs.
     """
 
-    def __init__(self, patience: int = 10, min_delta: float = 0.0001) -> None:
+    def __init__(
+        self,
+        patience: int = 10,
+        min_delta: float = 0.0001,
+    ) -> None:
         """
         Create the early stopping object with attributes.
 

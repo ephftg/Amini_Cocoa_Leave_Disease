@@ -452,8 +452,12 @@ class Train(BaseRegistry):
                         range(1, max_epochs + 1), desc="Training", unit="epoch"
                     ):
                         tr_loss, _, _ = self._run_one_epoch(
-                            obj_detect_model, tr_loader, optimizer, is_train=True
+                            obj_detect_model,
+                            tr_loader,
+                            optimizer,
+                            is_train=True,
                         )
+
                         val_loss, val_map, val_map_50 = self._run_one_epoch(
                             obj_detect_model,
                             val_loader,
@@ -539,7 +543,9 @@ class Train(BaseRegistry):
                 pruner=pruner,
             )
             study.optimize(
-                objective, n_trials=self.cfg["num_trials"], show_progress_bar=False
+                objective,
+                n_trials=self.cfg["num_trials"],
+                show_progress_bar=False,
             )
             # check if any trial is completed
             completed_trials = [
@@ -616,7 +622,9 @@ class Train(BaseRegistry):
         obj_detect_model = model_cls(num_classes=num_classes).to(self.device)
 
         optimizer = AdamW(
-            obj_detect_model.trainable_parameters(), lr=lr, weight_decay=wd
+            obj_detect_model.trainable_parameters(),
+            lr=lr,
+            weight_decay=wd,
         )
 
         run_name_prefix = "train_full_set"
@@ -644,7 +652,10 @@ class Train(BaseRegistry):
                 ):
                     # just training only, no validation set
                     tr_loss, _, _ = self._run_one_epoch(
-                        obj_detect_model, tr_loader, optimizer, is_train=True
+                        obj_detect_model,
+                        tr_loader,
+                        optimizer,
+                        is_train=True,
                     )
 
                     em = EpochMetrics(
