@@ -57,7 +57,7 @@ services:
 
   fastapi:
     build:
-      context: .  # set root
+      context: .
       dockerfile: ./docker/inference/Dockerfile.backend
     container_name: fastapi-backend
     restart: unless-stopped
@@ -67,17 +67,17 @@ services:
       mlflow:
         condition: service_healthy    # waits until MLflow passes healthcheck
     volumes:
-      - ./logs:/app/logs           # preserve logs on host
-      - ./data:/app/data:ro           # :ro = read-only inside container for training data
-    deploy:                           # tells Docker to pass GPU to container at runtime
+      - ./logs:/app/logs
+      - ./data:/app/data:ro
+    deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+    healthcheck:  # uv command since using uv
+      test: ["CMD", "uv", "run", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -87,18 +87,20 @@ services:
 
   streamlit:
     build:
-      context: .  # set root
+      context: .
       dockerfile: ./docker/inference/Dockerfile.frontend
     container_name: streamlit-frontend
     restart: unless-stopped
     depends_on:
       fastapi:
-        condition: service_healthy
+        condition: service_healthy  # wait until fastapi pass health check
     ports:
       - "8501:8501"
+    environment:
+      - PYTHONPATH=/app
     volumes:
-      - ./logs:/app/logs           # preserve logs on host
-      - ./data:/app/data:ro           # :ro = read-only inside container for training data
+      - ./logs:/app/logs
+      - ./data:/app/data:ro           # needed for local file
     networks:
       - mlflow-net
 

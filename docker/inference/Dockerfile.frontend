@@ -1,0 +1,29 @@
+FROM python:3.12-slim-bookworm
+
+WORKDIR /app
+
+ENV PYTHONPATH=/app
+
+# cpu torch since doing inference only
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
+
+# use cache to speed up between builds
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install \
+    streamlit==1.56.0 \
+    pillow==12.1.1 \
+    pandas==2.3.3 \
+    requests==2.33.1 \
+    mlflow==2.22.4 \
+    iterative-stratification==0.1.9
+
+RUN mkdir -p /app/logs /app/data
+
+COPY config/inference_config.yaml ./config/inference_config.yaml
+COPY src/utils ./src/utils
+COPY src/inference ./src/inference
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "src/inference/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]

@@ -1,0 +1,29 @@
+FROM nvidia/cuda:12.8.0-cudnn-runtime-ubuntu24.04
+# compatible with pyproject.toml, need runtime for model training
+# contains CUDA libraries
+
+# copy uv binary from official image, faster than install
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Set working directory
+WORKDIR /app
+
+# install python using uv
+COPY .python-version .
+RUN UV_PYTHON_DOWNLOADS=auto uv python install
+
+# create environment, cache to speed up but not written in
+# add inference group
+COPY pyproject.toml uv.lock .
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --group inference
+
+RUN mkdir -p /app/logs /app/data
+
+# Copy project files
+COPY src ./src
+COPY config/inference_config.yaml ./config/inference_config.yaml
+
+EXPOSE 8000
+
+CMD ["uv", "run", "uvicorn", "src.inference.fastapi_inference:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,28 @@
+# model for inference in mlflow
+mlflow_uri: "http://mlflow-server:5000"
+mlflow_artifact_uri: "models:/FasterRCNN_ConvNeXtV2@champion"
+# get model from model registry under the alias champion
+
+# inference processor
+inference_processor_plugins:
+  - src.inference.inference_processor.simple_inference_processor
+
+inference_processor_name: simple
+
+# backend FastAPI inference URL
+inference_url: "http://fastapi-backend:8000/infer"
+
+inference_batch_size: 8
+
+# label index to class name
+# sorted by class name
+class_map:
+  0: "background"
+  1: "anthracnose"
+  2: "cssvd"
+  3: "healthy"
+
+
+# data image directory
+data_dir : data/dataset/images/clean_data
+df_file : data/clean_data.csv
