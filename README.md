@@ -4,6 +4,8 @@ The dataset for this project is sourced from Kaggle: [Amini Cocoa Contamination 
 
 The objective is to develop an object detection model that can accurately identify diseased cocoa leaves from images. This aims to reduce the workload of cocoa farmers, as current practices rely on manual visual inspection by agricultural officers.
 
+**Note:** This codebase was written with the assistance of (https://claude.ai).
+
 # Exploratory Data Analysis (EDA)
 
 The dataset contains both training and test splits. Only the training set is used, as the test set does not include bounding box ground truth annotations.
@@ -198,7 +200,7 @@ Full training on the combined training and validation set took approximately 2.5
 | Metric | value |
 | -------- | -------- |
 | mAP@0.5 | 0.69 |
-| mAP@0.5:0.95 | .38 |
+| mAP@0.5:0.95 | 0.38 |
 
 
 A mAP@0.5 score of 0.69 indicates acceptable object detection performance. However, the lower mAP@0.5:0.95 (Means Average mAP over IoU thresholds, from 0.5 to 0.95 with step 0.05) score of 0.38 suggests that the model struggles with precise bounding box localization.
